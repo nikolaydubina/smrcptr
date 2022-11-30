@@ -24,6 +24,11 @@ smrcptr/internal/bakery/pancake.go:7:1: Pancake.Fry uses pointer
 smrcptr/internal/bakery/pancake.go:9:1: Pancake.Bake uses value
 ```
 
+Why this is useful? Go has rules on how it can automatically select value and method receivers, which is complex and can lead to bugs.
+Official Go [guideline](https://github.com/golang/go/wiki/CodeReviewComments#receiver-type) recomments:
+
+> Don't mix receiver types. Choose either pointers or struct types for all available methods.
+
 ## Requirements
 
 ```bash
@@ -76,6 +81,7 @@ main.go:9:18: methods on the same type should have the same receiver name (seen 
 
 ## References
 
+* https://github.com/golang/go/wiki/CodeReviewComments#receiver-type
 * https://golang.org/ref/spec#Method_declarations
 * https://golangci-lint.run/usage/linters/
 * https://github.com/dominikh/go-tools/blob/master/stylecheck/lint.go#L295
