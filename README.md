@@ -29,7 +29,7 @@ go install github.com/nikolaydubina/smrcptr@latest
 
 ## Features
 
-## Return Status Code
+### Return Status Code
 
 When issue is detected, related info is printed and status code is non-zero.
 This is similar as other `go vet` and linters.
