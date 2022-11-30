@@ -25,7 +25,7 @@ smrcptr/internal/bakery/pancake.go:9:1: Pancake.Bake uses value
 ```
 
 Why this is useful? Go has rules on how it can automatically select value and method receivers, which is complex and can lead to bugs.
-Official Go [guideline](https://github.com/golang/go/wiki/CodeReviewComments#receiver-type) recomments:
+Official Go [guideline](https://github.com/golang/go/wiki/CodeReviewComments#receiver-type) recommends:
 
 > Don't mix receiver types. Choose either pointers or struct types for all available methods.
 
