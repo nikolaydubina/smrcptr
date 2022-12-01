@@ -29,8 +29,9 @@ func init() {
 func run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
-	typePtrFns := map[string][]ast.FuncDecl{}
-	typeValFns := map[string][]ast.FuncDecl{}
+        // non-nil pointers for memory efficiency
+	typePtrFns := map[string][]*ast.FuncDecl{}
+	typeValFns := map[string][]*ast.FuncDecl{}
 
 	inspect.Preorder([]ast.Node{&ast.FuncDecl{}}, func(n ast.Node) {
 		fn, ok := n.(*ast.FuncDecl)
@@ -44,13 +45,13 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 		// constructor
 		if fn.Recv == nil {
-			if tname, ok := isConstructor(*fn); ok && enableConstructorCheck {
-				hasPtr, hasVal := checkConstructorReturns(tname, *fn)
+			if tname, ok := isConstructor(fn); ok && enableConstructorCheck {
+				hasPtr, hasVal := checkConstructorReturns(tname, fn)
 				if hasPtr {
-					typePtrFns[tname] = append(typePtrFns[tname], *fn)
+					typePtrFns[tname] = append(typePtrFns[tname], fn)
 				}
 				if hasVal {
-					typeValFns[tname] = append(typeValFns[tname], *fn)
+					typeValFns[tname] = append(typeValFns[tname], fn)
 				}
 			}
 			return
@@ -66,9 +67,9 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			}
 			tname, isPointer := isPointer(*v)
 			if isPointer {
-				typePtrFns[tname] = append(typePtrFns[tname], *fn)
+				typePtrFns[tname] = append(typePtrFns[tname], fn)
 			} else {
-				typeValFns[tname] = append(typeValFns[tname], *fn)
+				typeValFns[tname] = append(typeValFns[tname], fn)
 			}
 		}
 	})
@@ -102,7 +103,7 @@ func isPointer(v ast.Field) (tname string, ok bool) {
 	return "", false
 }
 
-func mergekeys(vs ...map[string][]ast.FuncDecl) (keys map[string]bool) {
+func mergekeys(vs ...map[string][]*ast.FuncDecl) (keys map[string]bool) {
 	keys = map[string]bool{}
 	for _, v := range vs {
 		for k := range v {

@@ -9,7 +9,7 @@ const (
 	constructorPrefix = "New"
 )
 
-func isConstructor(v ast.FuncDecl) (tname string, ok bool) {
+func isConstructor(v *ast.FuncDecl) (tname string, ok bool) {
 	if v.Name == nil {
 		return "", false
 	}
@@ -19,7 +19,7 @@ func isConstructor(v ast.FuncDecl) (tname string, ok bool) {
 	return v.Name.Name[len(constructorPrefix):], true
 }
 
-func checkConstructorReturns(name string, fn ast.FuncDecl) (hasPtr, hasVal bool) {
+func checkConstructorReturns(name string, fn *ast.FuncDecl) (hasPtr, hasVal bool) {
 	if fn.Type == nil {
 		return false, false
 	}
