@@ -84,3 +84,4 @@ main.go:9:18: methods on the same type should have the same receiver name (seen 
 * https://github.com/dominikh/go-tools/blob/master/stylecheck/lint.go#L295
 * https://github.com/dominikh/go-tools/tree/master/stylecheck/testdata/src/CheckReceiverNamesIdentical
 * https://google.github.io/styleguide/go/decisions#receiver-type
+* https://github.com/dominikh/go-tools/issues/911
