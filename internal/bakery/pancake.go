@@ -49,6 +49,8 @@ func NewOven() (*Oven, error) { return nil, nil }
 // Teacup defines methods from stanard packages that will be skipped
 type Teacup struct{}
 
+func (s Teacup) Name() {}
+
 //encoding
 func (s *Teacup) UnmarshalJSON([]byte) error                                { return nil }
 func (s *Teacup) UnmarshalText([]byte) error                                { return nil }
@@ -63,6 +65,8 @@ func (s *Teacup) Scan(src any) error { return nil }
 func (s *Teacup) Read(p []byte) (n int, err error)
 
 type TeacupTwo struct{}
+
+func (s TeacupTwo) Name() {}
 
 // fmt
 func (s *TeacupTwo) Scan(state fmt.ScanState, verb rune) error { return nil }

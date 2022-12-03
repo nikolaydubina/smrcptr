@@ -35,23 +35,26 @@ type functionSelector interface {
 func run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
-	var fnSelector functionSelector = allFunctions{}
+	var fnSelector functionSelector = mapNameFunctionSelector{def: true}
 	if skipSTD {
 		// TODO: use type of function too or find native way to test if interface is satisfied
-		fnSelector = andFunctions{[]functionSelector{
-			// encoding
-			notFunction{nameFunction{"UnmarshalJSON"}},
-			notFunction{nameFunction{"UnmarshalText"}},
-			notFunction{nameFunction{"UnmarshalBinary"}},
-			notFunction{nameFunction{"UnmarshalXML"}},
-			notFunction{nameFunction{"UnmarshalXMLAttr"}},
-			// database/sql
-			notFunction{nameFunction{"Scanner"}},
-			// fmt
-			notFunction{nameFunction{"Scan"}},
-			// io
-			notFunction{nameFunction{"Read"}},
-		}}
+		fnSelector = mapNameFunctionSelector{
+			def: true,
+			fns: map[string]bool{
+				// encoding
+				"UnmarshalJSON":    false,
+				"UnmarshalText":    false,
+				"UnmarshalBinary":  false,
+				"UnmarshalXML":     false,
+				"UnmarshalXMLAttr": false,
+				// database/sql
+				"Scanner": false,
+				// fmt
+				"Scan": false,
+				// io
+				"Read": false,
+			},
+		}
 	}
 
 	// non-nil pointers for memory efficiency
