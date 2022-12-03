@@ -34,7 +34,7 @@ go install github.com/nikolaydubina/smrcptr@latest
 
 ## Features
 
-### Skipping Methods from stanard packages
+### Skipping methods from standard packages
 
 Very common methods that has to have method receivers are skipped with `-skip-std=true` by default.
 
