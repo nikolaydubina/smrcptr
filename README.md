@@ -34,6 +34,19 @@ go install github.com/nikolaydubina/smrcptr@latest
 
 ## Features
 
+### Skipping Methods from stanard packages
+
+Very common methods that has to have method receivers are skipped with `-skip-std=true` by default.
+
+- [encoding/json.UnmarshalJSON](https://pkg.go.dev/encoding/json#Unmarshaler)
+- [encoding.UnmarshalText](https://pkg.go.dev/encoding#TextUnmarshaler)
+- [encoding.UnmarshalBinary](https://pkg.go.dev/encoding/json#Unmarshaler)
+- [encoding/xml.UnmarshalXML](https://pkg.go.dev/encoding/xml@go1.19.3#Unmarshaler)
+- [encoding/xml.UnmarshalXMLAttr](https://pkg.go.dev/encoding/xml@go1.19.3#UnmarshalerAttr)
+- [database/sql.Scan](https://pkg.go.dev/database/sql#Scanner)
+- [fmt.Scan](https://pkg.go.dev/fmt#Scanner)
+- [io.Read](https://pkg.go.dev/io#Reader)
+
 ### Return Status Code
 
 When issue is detected, related info is printed and status code is non-zero.

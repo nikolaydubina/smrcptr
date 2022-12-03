@@ -20,16 +20,41 @@ var Analyzer = &analysis.Analyzer{
 
 var (
 	enableConstructorCheck bool
+	skipSTD                bool
 )
 
 func init() {
 	Analyzer.Flags.BoolVar(&enableConstructorCheck, "constructor", false, `enable constructor return type check`)
+	Analyzer.Flags.BoolVar(&skipSTD, "skip-std", true, `skip methods that satisfy typical interfaces from standard pacakges`)
+}
+
+type functionSelector interface {
+	SelectFunction(fn *ast.FuncDecl) bool
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
-        // non-nil pointers for memory efficiency
+	var fnSelector functionSelector = allFunctions{}
+	if skipSTD {
+		// TODO: use type of function too or find native way to test if interface is satisfied
+		fnSelector = andFunctions{[]functionSelector{
+			// encoding
+			notFunction{nameFunction{"UnmarshalJSON"}},
+			notFunction{nameFunction{"UnmarshalText"}},
+			notFunction{nameFunction{"UnmarshalBinary"}},
+			notFunction{nameFunction{"UnmarshalXML"}},
+			notFunction{nameFunction{"UnmarshalXMLAttr"}},
+			// database/sql
+			notFunction{nameFunction{"Scanner"}},
+			// fmt
+			notFunction{nameFunction{"Scan"}},
+			// io
+			notFunction{nameFunction{"Read"}},
+		}}
+	}
+
+	// non-nil pointers for memory efficiency
 	typePtrFns := map[string][]*ast.FuncDecl{}
 	typeValFns := map[string][]*ast.FuncDecl{}
 
@@ -65,6 +90,11 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			if v.Type == nil {
 				continue
 			}
+
+			if !fnSelector.SelectFunction(fn) {
+				continue
+			}
+
 			tname, isPointer := isPointer(*v)
 			if isPointer {
 				typePtrFns[tname] = append(typePtrFns[tname], fn)

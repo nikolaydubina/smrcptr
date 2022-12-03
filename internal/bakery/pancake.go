@@ -1,5 +1,10 @@
 package bakery
 
+import (
+	"encoding/xml"
+	"fmt"
+)
+
 type Pancake struct{}
 
 func NewPancake() Pancake { return Pancake{} }
@@ -40,3 +45,24 @@ func (BadCookie) Bake() {}
 type Oven struct{}
 
 func NewOven() (*Oven, error) { return nil, nil }
+
+// Teacup defines methods from stanard packages that will be skipped
+type Teacup struct{}
+
+//encoding
+func (s *Teacup) UnmarshalJSON([]byte) error                                { return nil }
+func (s *Teacup) UnmarshalText([]byte) error                                { return nil }
+func (s *Teacup) UnmarshalBinary([]byte) error                              { return nil }
+func (s *Teacup) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error { return nil }
+func (s *Teacup) UnmarshalXMLAttr(attr xml.Attr) error                      { return nil }
+
+// database/sql
+func (s *Teacup) Scan(src any) error { return nil }
+
+// io
+func (s *Teacup) Read(p []byte) (n int, err error)
+
+type TeacupTwo struct{}
+
+// fmt
+func (s *TeacupTwo) Scan(state fmt.ScanState, verb rune) error { return nil }
