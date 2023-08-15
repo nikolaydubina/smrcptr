@@ -51,7 +51,7 @@ type Teacup struct{}
 
 func (s Teacup) Name() {}
 
-//encoding
+// encoding
 func (s *Teacup) UnmarshalJSON([]byte) error                                { return nil }
 func (s *Teacup) UnmarshalText([]byte) error                                { return nil }
 func (s *Teacup) UnmarshalBinary([]byte) error                              { return nil }
@@ -62,7 +62,7 @@ func (s *Teacup) UnmarshalXMLAttr(attr xml.Attr) error                      { re
 func (s *Teacup) Scan(src any) error { return nil }
 
 // io
-func (s *Teacup) Read(p []byte) (n int, err error)
+func (s *Teacup) Read(p []byte) (n int, err error) { return 0, nil }
 
 type TeacupTwo struct{}
 
