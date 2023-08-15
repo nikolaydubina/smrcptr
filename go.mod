@@ -1,6 +1,6 @@
 module github.com/nikolaydubina/smrcptr
 
-go 1.18
+go 1.21
 
 require golang.org/x/tools v0.3.0
 

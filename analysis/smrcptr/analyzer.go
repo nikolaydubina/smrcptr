@@ -3,6 +3,9 @@ package smrcptr
 import (
 	"flag"
 	"go/ast"
+	"go/parser"
+	"go/token"
+	"log"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -21,11 +24,13 @@ var Analyzer = &analysis.Analyzer{
 var (
 	enableConstructorCheck bool
 	skipSTD                bool
+	skipGenerated          bool
 )
 
 func init() {
 	Analyzer.Flags.BoolVar(&enableConstructorCheck, "constructor", false, `enable constructor return type check`)
 	Analyzer.Flags.BoolVar(&skipSTD, "skip-std", true, `skip methods that satisfy typical interfaces from standard pacakges`)
+	Analyzer.Flags.BoolVar(&skipGenerated, "skip-generated", true, `skip generated files`)
 }
 
 type functionSelector interface {
@@ -41,18 +46,14 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		fnSelector = mapNameFunctionSelector{
 			def: true,
 			fns: map[string]bool{
-				// encoding
-				"UnmarshalJSON":    false,
-				"UnmarshalText":    false,
-				"UnmarshalBinary":  false,
-				"UnmarshalXML":     false,
-				"UnmarshalXMLAttr": false,
-				// database/sql
-				"Scanner": false,
-				// fmt
-				"Scan": false,
-				// io
-				"Read": false,
+				"UnmarshalJSON":    false, // encoding
+				"UnmarshalText":    false, // encoding
+				"UnmarshalBinary":  false, // encoding
+				"UnmarshalXML":     false, // encoding
+				"UnmarshalXMLAttr": false, // encoding
+				"Scanner":          false, // database/sql
+				"Scan":             false, // fmt
+				"Read":             false, // io
 			},
 		}
 	}
@@ -61,13 +62,27 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	typePtrFns := map[string][]*ast.FuncDecl{}
 	typeValFns := map[string][]*ast.FuncDecl{}
 
+	fset := token.NewFileSet()
+
 	inspect.Preorder([]ast.Node{&ast.FuncDecl{}}, func(n ast.Node) {
-		fn, ok := n.(*ast.FuncDecl)
-		if !ok || fn == nil {
+		if skipGenerated {
+			// TODO: find way to reuse ast.File from analysis inspector
+			fname := pass.Fset.Position(n.Pos()).Filename
+			f, err := parser.ParseFile(fset, fname, nil, parser.ParseComments|parser.PackageClauseOnly)
+			if err != nil {
+				log.Fatalf("failed to parse file %s: %v", fname, err)
+			}
+			if ast.IsGenerated(f) {
+				return
+			}
+		}
+
+		if !strings.HasSuffix(pass.Fset.Position(n.Pos()).Filename, ".go") {
 			return
 		}
 
-		if !strings.HasSuffix(pass.Fset.Position(fn.Pos()).Filename, ".go") {
+		fn, ok := n.(*ast.FuncDecl)
+		if !ok || fn == nil {
 			return
 		}
 
