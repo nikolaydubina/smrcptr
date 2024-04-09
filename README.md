@@ -25,8 +25,9 @@ func (s Pancake) Bake() {}
 
 ```bash
 $ smrcptr ./...
-smrcptr/internal/bakery/pancake.go:7:1: Pancake.Fry uses pointer
-smrcptr/internal/bakery/pancake.go:9:1: Pancake.Bake uses value
+/pancake.go:12:1: Pancake.Fry uses pointer
+/pancake.go:10:1: Pancake.NewPancake uses value
+/pancake.go:14:1: Pancake.Bake uses value
 ```
 
 ## Existing Linters
