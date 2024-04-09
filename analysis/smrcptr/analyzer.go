@@ -6,6 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 	"log"
+	"regexp"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -22,15 +23,20 @@ var Analyzer = &analysis.Analyzer{
 }
 
 var (
-	enableConstructorCheck bool
-	skipSTD                bool
-	skipGenerated          bool
+	constructor       string
+	skip              string
+	skipGenerated     bool
+	constructorRegExp *regexp.Regexp
 )
 
 func init() {
-	Analyzer.Flags.BoolVar(&enableConstructorCheck, "constructor", false, `enable constructor return type check`)
-	Analyzer.Flags.BoolVar(&skipSTD, "skip-std", true, `skip methods that satisfy typical interfaces from standard pacakges`)
+	Analyzer.Flags.StringVar(&constructor, "constructor", "^New(?P<Type>.*)", `regexp to detect constructor and type that it belongs to, if empty then skipping constructor`)
+	Analyzer.Flags.StringVar(&skip, "skip", "^UnmarshalJSON$|^UnmarshalText$|^UnmarshalBinary$|^UnmarshalXML$|^UnmarshalXMLAttr$|^Scanner$|^Scan$|^Read$", `regexp to skip methods, if empty then none skipped`)
 	Analyzer.Flags.BoolVar(&skipGenerated, "skip-generated", true, `skip generated files`)
+
+	if constructor != "" {
+		constructorRegExp = regexp.MustCompile(constructor)
+	}
 }
 
 type functionSelector interface {
@@ -40,22 +46,9 @@ type functionSelector interface {
 func run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
-	var fnSelector functionSelector = mapNameFunctionSelector{def: true}
-	if skipSTD {
-		// TODO: use type of function too or find native way to test if interface is satisfied
-		fnSelector = mapNameFunctionSelector{
-			def: true,
-			fns: map[string]bool{
-				"UnmarshalJSON":    false, // encoding
-				"UnmarshalText":    false, // encoding
-				"UnmarshalBinary":  false, // encoding
-				"UnmarshalXML":     false, // encoding
-				"UnmarshalXMLAttr": false, // encoding
-				"Scanner":          false, // database/sql
-				"Scan":             false, // fmt
-				"Read":             false, // io
-			},
-		}
+	var fnSelector functionSelector = noopFunctionSelector{v: true}
+	if skip != "" {
+		fnSelector = regExpFunctionSelector{regexp: regexp.MustCompile(skip)}
 	}
 
 	// non-nil pointers for memory efficiency
@@ -88,13 +81,15 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 		// constructor
 		if fn.Recv == nil {
-			if tname, ok := isConstructor(fn); ok && enableConstructorCheck {
-				hasPtr, hasVal := checkConstructorReturns(tname, fn)
-				if hasPtr {
-					typePtrFns[tname] = append(typePtrFns[tname], fn)
-				}
-				if hasVal {
-					typeValFns[tname] = append(typeValFns[tname], fn)
+			if constructor != "" {
+				if tname, ok := isConstructor(fn); ok {
+					hasPtr, hasVal := checkConstructorReturns(tname, fn)
+					if hasPtr {
+						typePtrFns[tname] = append(typePtrFns[tname], fn)
+					}
+					if hasVal {
+						typeValFns[tname] = append(typeValFns[tname], fn)
+					}
 				}
 			}
 			return
@@ -152,11 +147,64 @@ func isPointer(v ast.Field) (tname string, ok bool) {
 }
 
 func mergekeys(vs ...map[string][]*ast.FuncDecl) (keys map[string]bool) {
-	keys = map[string]bool{}
+	keys = make(map[string]bool)
 	for _, v := range vs {
 		for k := range v {
 			keys[k] = true
 		}
 	}
 	return keys
+}
+
+type regExpFunctionSelector struct {
+	regexp *regexp.Regexp
+}
+
+func (s regExpFunctionSelector) SelectFunction(fn *ast.FuncDecl) bool {
+	if fn.Name == nil {
+		return false
+	}
+	return !s.regexp.MatchString(fn.Name.Name)
+}
+
+type noopFunctionSelector struct{ v bool }
+
+func (s noopFunctionSelector) SelectFunction(fn *ast.FuncDecl) bool { return s.v }
+
+func isConstructor(v *ast.FuncDecl) (tname string, ok bool) {
+	if v.Name == nil {
+		return "", false
+	}
+	matches := constructorRegExp.FindStringSubmatch(v.Name.Name)
+	if idx := constructorRegExp.SubexpIndex("Type"); len(matches) > 0 && idx >= 0 && matches[idx] != "" {
+		return matches[idx], true
+	}
+	return "", false
+}
+
+func checkConstructorReturns(name string, fn *ast.FuncDecl) (hasPtr, hasVal bool) {
+	if fn.Type == nil {
+		return false, false
+	}
+	if fn.Type.Results == nil {
+		return false, false
+	}
+	if len(fn.Type.Results.List) == 0 {
+		return false, false
+	}
+	for _, q := range fn.Type.Results.List {
+		if q == nil {
+			continue
+		}
+		tname, isPointer := isPointer(*q)
+		if tname != name {
+			continue
+		}
+		if isPointer {
+			hasPtr = true
+		} else {
+			hasVal = true
+		}
+	}
+	return hasPtr, hasVal
 }

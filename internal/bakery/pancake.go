@@ -61,6 +61,8 @@ func (s *Teacup) UnmarshalXMLAttr(attr xml.Attr) error                      { re
 // database/sql
 func (s *Teacup) Scan(src any) error { return nil }
 
+func (s Teacup) Scanne(src any) error { return nil }
+
 // io
 func (s *Teacup) Read(p []byte) (n int, err error) { return 0, nil }
 
