@@ -35,7 +35,7 @@ $ smrcptr ./...
 #### staticcheck
 
 As of `2022-11-30`, it does not detect that pointer and value method receivers are mixed.
-Most relevant analyzser `ST1016` checks only name of method reciver.
+Most relevant analyzer `ST1016` checks only name of method receiver.
 
 ```bash
 $ staticcheck -checks ST1016 ./...    
