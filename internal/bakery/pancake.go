@@ -46,7 +46,7 @@ type Oven struct{}
 
 func NewOven() (*Oven, error) { return nil, nil }
 
-// Teacup defines methods from stanard packages that will be skipped
+// Teacup defines methods from standard packages that will be skipped
 type Teacup struct{}
 
 func (s Teacup) Name() {}
