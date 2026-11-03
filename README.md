@@ -1,8 +1,5 @@
 ## Same Receiver Pointer (smrcptr)
 
-[![go-recipes](https://raw.githubusercontent.com/nikolaydubina/go-recipes/main/badge.svg?raw=true)](https://github.com/nikolaydubina/go-recipes)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/nikolaydubina/smrcptr/badge)](https://securityscorecards.dev/viewer/?uri=github.com/nikolaydubina/smrcptr)
-
 > Don't mix receiver types. Choose either pointers or struct types for all available methods.
 
 Go has rules on how it automatically selects either value or method receivers, which is complex and can lead to bugs.
